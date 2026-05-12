@@ -1,16 +1,3 @@
-
-## Announcements
-
-> [Oct 15, 2018] Thalmic Labs have announced the discontinuation of the Myo
-> armband.
-
-> [Jun 28, 2018] Myo-Python 1.0 has been released. It comes with a number of
-> API changes. If you have been following an older tutorial, you might have
-> the new version installed but use code that worked with the old version.  
-> Check the [Migrating from v0.2.x](#migrating-from-v02x) section below.
-
----
-
 <p align="center">
   <img align="center" height="70px" src="docs/myo-logo.jpg"/>
   <img align="center" height="70px" src="https://www.python.org/static/community_logos/python-logo.png"/>
@@ -111,37 +98,3 @@ bit different API. The most important changes are:
 ### Projects using Myo-Python
 
 - [Myo Matlab](https://github.com/yijuilee/myomatlab)
-
-### Changes
-
-#### v1.0.4 (2019-04-29)
-
-- Remove myo.quaternion, it was a leftover and the Quaternion class was actually in myo.types.math
-- move myo.types.math and myo.types.macaddr to myo package instead
-- myo.types package is now a stub for backwards compatibility
-- Depend on `enum34` package instead of `nr.types.enum` which has been removed in `nr.types>=2.0.0`
-- Update the error message of a `ValueError` raised in `myo.init()`
-
-#### v1.0.3 (2018-06-28)
-
-- `Event.mac_address` now returns `None` if the event's type is `EventType.emg` (#62)
-- `Hub.run()` now accepts `DeviceListener` objects for its *handler* parameter.
-  This carries over to `Hub.run_forever()` and `Hub.run_in_background()`.
-- Replace requirement `nr>=2.0.10,<3` in favor of `nr.types>=1.0.3`
-
-#### v1.0.2 (2018-06-09)
-
-- Fix `Event.warmup_result` (PR #58 @fribeiro1)
-
-#### v1.0.1 (2018-06-09)
-
-- Fix `Event.rotation_on_arm` (#59)
-
-#### v1.0.0 (2018-06-03)
-
-- Rewrite using CFFI
-
-----
-
-<p align="center">This project is licensed under the MIT License.</br>
-Copyright &copy; 2015-2018 Niklas Rosenstein</p>
