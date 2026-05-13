@@ -1,51 +1,56 @@
-<p align="center">
-  <img align="center" height="70px" src="docs/myo-logo.jpg"/>
-  <img align="center" height="70px" src="https://www.python.org/static/community_logos/python-logo.png"/>
-</p>
-<p align="center">
-  <a href="https://opensource.org/licenses/MIT" alt="License: MIT">
-    <img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square"/>
-  </a>
-</p>
-<h1 align="center">Python bindings for the Myo SDK</h1>
+This work is based on the [myo-python](https://github.com/NiklasRosenstein/myo-python) repository.
 
-Myo-Python is a [CFFI] wrapper for the [Thalmic Myo SDK].
+# Myo Python Wrapper
 
-__Table of Contents__
+Python bindings for the Thalmic Labs Myo SDK, plus a small set of example scripts for reading device state, streaming EMG, and plotting live data.
 
-* [Documentation](#documentation)
-* [Example](#example)
-* [Migrating from v0.2.x](#migrating-from-v02x)
-* [Projects using Myo-Python](#projects-using-myo-python)
+## Requirements
 
-[CFFI]: https://pypi.python.org/pypi/cffi
-[Thalmic Myo SDK]: https://developer.thalmic.com/downloads
+This repository is currently being used on Windows 11 with Python 3.10.
 
-### Documentation
+- Windows 11
+- Python 3.10
+- The Myo Connect app running in the background
+- The Myo SDK extracted locally and passed to `myo.init()`
 
-The documentation can currently be found in the `docs/` directory in the
-[GitHub Repository](https://github.com/NiklasRosenstein/myo-python).
+The official SDK is no longer distributed by Thalmic. To download the SDK used for this project, use [this release](https://github.com/NiklasRosenstein/myo-python/releases/tag/v1.0.4).
 
-### Example
+## Installation
 
-Myo-Python mirrors the usage of the Myo C++ SDK in many ways as it also
-requires you to implement a `DeviceListener` that will then be invoked for
-any events received from a Myo device.
+Install the package into a virtual environment and make sure the Myo dongle is connected before running any script.
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+pip install -e .
+```
+
+If you want to run the live plotting example, also install:
+
+```bash
+pip install numpy matplotlib
+```
+
+## Basic Usage
 
 ```python
 import myo
 
+
 class Listener(myo.DeviceListener):
-  def on_paired(self, event):
+  def on_connected(self, event):
     print("Hello, {}!".format(event.device_name))
     event.device.vibrate(myo.VibrationType.short)
+
   def on_unpaired(self, event):
-    return False  # Stop the hub
+    return False
+
   def on_orientation(self, event):
     orientation = event.orientation
     acceleration = event.acceleration
     gyroscope = event.gyroscope
-    # ... do something with that
+    # Use the sensor data here.
+
 
 if __name__ == '__main__':
   myo.init(sdk_path='./myo-sdk-win-0.9.0/')
@@ -55,46 +60,96 @@ if __name__ == '__main__':
     pass
 ```
 
-As an alternative to implementing a custom device listener, you can instead
-use the `myp.ApiDeviceListener` class which allows you to read the most recent
-state of one or multiple Myo devices.
+If you prefer a stateful helper instead of implementing every callback yourself, use `myo.ApiDeviceListener` to read the most recent device state.
 
 ```python
 import myo
 import time
 
+
 def main():
   myo.init(sdk_path='./myo-sdk-win-0.9.0/')
   hub = myo.Hub()
   listener = myo.ApiDeviceListener()
+
   with hub.run_in_background(listener.on_event):
     print("Waiting for a Myo to connect ...")
     device = listener.wait_for_single_device(2)
     if not device:
       print("No Myo connected after 2 seconds.")
       return
+
     print("Hello, Myo! Requesting RSSI ...")
     device.request_rssi()
     while hub.running and device.connected and not device.rssi:
-      print("Waiting for RRSI...")
+      print("Waiting for RSSI...")
       time.sleep(0.001)
+
     print("RSSI:", device.rssi)
     print("Goodbye, Myo!")
+
+
+if __name__ == '__main__':
+  main()
 ```
 
-### Migrating from v0.2.x
+## Examples
 
-The v0.2.x series of the Myo-Python library used `ctypes` and has a little
-bit different API. The most important changes are:
+All examples live in the [examples](examples) folder and assume that Myo Connect is running, the dongle is paired, and `myo.init()` can find the SDK on disk.
 
-* The `Hub` object no longer needs to be shut down explicitly
-* The `DeviceListener` method names changed to match the exact event name
-  as specified by the Myo SDK (eg. from `on_pair()` to `on_paired()`)
-* `Hub.run()`: The order of arguments is reversed (`handler, duration_ms`
-  instead of `duration_ms, handler`)
-* `myo.init()`: Provides a few more parameters to control the way `libmyo` is detected.
-* `myo.Feed`: Renamed to `myo.ApiDeviceListener`
+### `01_hello_myo.py`
 
-### Projects using Myo-Python
+Minimal listener example. It prints a greeting when a device connects, requests the battery level, vibrates once, and exits when you perform a double tap.
 
-- [Myo Matlab](https://github.com/yijuilee/myomatlab)
+Run it with:
+
+```bash
+python examples/01_hello_myo.py
+```
+
+### `02_display_data.py`
+
+Terminal dashboard example. It shows orientation, pose, RSSI, lock state, and EMG data when streaming is enabled. Double tap turns EMG streaming on, and finger spread turns it off.
+
+Run it with:
+
+```bash
+python examples/02_display_data.py
+```
+
+### `03_live_emg.py`
+
+Live EMG plot example. It streams EMG data into a rolling matplotlib chart with eight channels.
+
+Run it with:
+
+```bash
+python examples/03_live_emg.py
+```
+
+Before running this one, install `numpy` and `matplotlib`.
+
+### `04_emg_rate.py`
+
+EMG rate monitor example. It prints the approximate EMG callback rate in the terminal.
+
+Run it with:
+
+```bash
+python examples/04_emg_rate.py
+```
+
+### `05_api_listener.py`
+
+Stateful listener example. It waits for a single device, requests RSSI, and reads the latest values through `ApiDeviceListener`.
+
+Run it with:
+
+```bash
+python examples/05_api_listener.py
+```
+
+## Notes
+
+- The Myo SDK path in the examples is just a placeholder. Update it to match where you extracted the SDK on your machine.
+- If you are adapting the examples for a different Python version, check any standard-library calls that may have changed over time.
