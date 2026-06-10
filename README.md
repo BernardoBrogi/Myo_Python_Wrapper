@@ -148,8 +148,3 @@ Run it with:
 ```bash
 python examples/05_api_listener.py
 ```
-
-## Notes
-
-- The Myo SDK path in the examples is just a placeholder. Update it to match where you extracted the SDK on your machine.
-- If you are adapting the examples for a different Python version, check any standard-library calls that may have changed over time.
